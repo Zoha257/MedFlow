@@ -1,0 +1,11 @@
+torch
+torchvision
+medmnist
+numpy
+pandas
+matplotlib
+scikit-learn
+pillow
+tqdm
+psycopg2-binary
+python-dotenv
