@@ -54,6 +54,26 @@ POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
 ```
 
+### Windows portable PostgreSQL setup
+
+If PostgreSQL is installed with Scoop, initialize and start a user-owned server
+without requiring administrator access:
+
+```powershell
+scoop install postgresql
+$pg = "$env:USERPROFILE\scoop\apps\postgresql\current\bin"
+$data = "$env:USERPROFILE\postgres-data-medflow"
+& "$pg\initdb.exe" -D $data -U medflow --auth=trust
+& "$pg\pg_ctl.exe" -D $data -l "$data\server.log" -o "-p 5432" start
+& "$pg\psql.exe" -h localhost -p 5432 -U medflow -d postgres -c "CREATE DATABASE medflow;"
+```
+
+Then run the metadata pipeline:
+
+```powershell
+python -m src.database.db
+```
+
 ## Notes
 
 - The project is intended for research/educational use only and is not a clinical diagnostic system.
