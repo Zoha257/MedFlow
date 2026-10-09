@@ -15,9 +15,11 @@ The Day 1 success condition from the handover is:
 ## Project structure
 
 - `src/data/` — dataset download, validation, and preprocessing scripts
+- `src/models/` — baseline CNN, training, and evaluation code
 - `src/database/` — PostgreSQL setup and metadata insertion utilities
 - `data/raw/` — raw dataset data from MedMNIST
 - `data/processed/` — normalized and processed dataset outputs
+- `results/` — evaluation metrics and confusion matrix
 
 ## Quick start
 
@@ -73,6 +75,26 @@ Then run the metadata pipeline:
 ```powershell
 python -m src.database.db
 ```
+
+## Day 2 baseline model
+
+The Day 2 pipeline trains a deterministic PyTorch CNN baseline and records
+accuracy, macro precision, macro recall, macro F1, training time, parameter
+count, and a confusion matrix:
+
+```powershell
+python -m src.models.train --epochs 1 --batch-size 1024
+```
+
+Outputs:
+
+- `models/baseline_model.pth`
+- `results/results.json`
+- `results/confusion_matrix.png`
+
+The checked-in full-dataset run used one epoch, seed `42`, and CPU execution.
+Its measured test accuracy was `0.6753` and macro F1 was `0.5923`. These are
+reported measurements from the run, not target or fabricated values.
 
 ## Notes
 
