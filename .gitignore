@@ -24,6 +24,8 @@ data/processed/
 models/*.pth
 models/*.pt
 models/*.onnx
+!models/
+!models/resnet18.pth
 
 # =========================
 # Jupyter
@@ -45,3 +47,5 @@ Thumbs.db
 # Logs
 # =========================
 *.log
+mlflow.db
+mlruns/

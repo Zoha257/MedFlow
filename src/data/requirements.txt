@@ -10,3 +10,9 @@ tqdm
 psycopg2-binary
 python-dotenv
 pytest
+mlflow-skinny
+fastapi
+uvicorn[standard]
+python-multipart
+httpx2
+streamlit

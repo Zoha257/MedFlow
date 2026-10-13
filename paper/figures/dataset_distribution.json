@@ -1,0 +1,48 @@
+{
+  "labels": [
+    "adipose",
+    "background",
+    "debris",
+    "lymphocytes",
+    "mucus",
+    "smooth muscle",
+    "normal colon mucosa",
+    "cancer-associated stroma",
+    "colorectal adenocarcinoma epithelium"
+  ],
+  "counts": {
+    "train": [
+      9366,
+      9509,
+      10360,
+      10401,
+      8006,
+      12182,
+      7886,
+      9401,
+      12885
+    ],
+    "val": [
+      1041,
+      1057,
+      1152,
+      1156,
+      890,
+      1354,
+      877,
+      1045,
+      1432
+    ],
+    "test": [
+      1338,
+      847,
+      339,
+      634,
+      1035,
+      592,
+      741,
+      421,
+      1233
+    ]
+  }
+}

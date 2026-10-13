@@ -69,7 +69,7 @@ def save_evaluation_artifacts(
     axis.set(
         xlabel="Predicted label",
         ylabel="True label",
-        title="PathMNIST baseline CNN confusion matrix",
+        title="PathMNIST confusion matrix",
         xticks=np.arange(len(class_labels)),
         yticks=np.arange(len(class_labels)),
         xticklabels=class_labels,
