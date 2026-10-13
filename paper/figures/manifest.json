@@ -1,0 +1,169 @@
+{
+  "checkpoint": "C:\\Users\\My PC\\Desktop\\MedFlow\\models\\resnet18.pth",
+  "device": "cpu",
+  "evaluated_examples": 20,
+  "correct_examples": 10,
+  "incorrect_examples": 10,
+  "records": [
+    {
+      "file": "wrong_01.png",
+      "correct": false,
+      "true_class": 8,
+      "predicted_class": 1,
+      "true_label": "colorectal adenocarcinoma epithelium",
+      "predicted_label": "background"
+    },
+    {
+      "file": "wrong_02.png",
+      "correct": false,
+      "true_class": 4,
+      "predicted_class": 1,
+      "true_label": "mucus",
+      "predicted_label": "background"
+    },
+    {
+      "file": "wrong_03.png",
+      "correct": false,
+      "true_class": 4,
+      "predicted_class": 1,
+      "true_label": "mucus",
+      "predicted_label": "background"
+    },
+    {
+      "file": "wrong_04.png",
+      "correct": false,
+      "true_class": 8,
+      "predicted_class": 1,
+      "true_label": "colorectal adenocarcinoma epithelium",
+      "predicted_label": "background"
+    },
+    {
+      "file": "wrong_05.png",
+      "correct": false,
+      "true_class": 4,
+      "predicted_class": 1,
+      "true_label": "mucus",
+      "predicted_label": "background"
+    },
+    {
+      "file": "wrong_06.png",
+      "correct": false,
+      "true_class": 4,
+      "predicted_class": 1,
+      "true_label": "mucus",
+      "predicted_label": "background"
+    },
+    {
+      "file": "wrong_07.png",
+      "correct": false,
+      "true_class": 8,
+      "predicted_class": 1,
+      "true_label": "colorectal adenocarcinoma epithelium",
+      "predicted_label": "background"
+    },
+    {
+      "file": "wrong_08.png",
+      "correct": false,
+      "true_class": 0,
+      "predicted_class": 1,
+      "true_label": "adipose",
+      "predicted_label": "background"
+    },
+    {
+      "file": "wrong_09.png",
+      "correct": false,
+      "true_class": 6,
+      "predicted_class": 1,
+      "true_label": "normal colon mucosa",
+      "predicted_label": "background"
+    },
+    {
+      "file": "wrong_10.png",
+      "correct": false,
+      "true_class": 8,
+      "predicted_class": 1,
+      "true_label": "colorectal adenocarcinoma epithelium",
+      "predicted_label": "background"
+    },
+    {
+      "file": "correct_01.png",
+      "correct": true,
+      "true_class": 1,
+      "predicted_class": 1,
+      "true_label": "background",
+      "predicted_label": "background"
+    },
+    {
+      "file": "correct_02.png",
+      "correct": true,
+      "true_class": 1,
+      "predicted_class": 1,
+      "true_label": "background",
+      "predicted_label": "background"
+    },
+    {
+      "file": "correct_03.png",
+      "correct": true,
+      "true_class": 1,
+      "predicted_class": 1,
+      "true_label": "background",
+      "predicted_label": "background"
+    },
+    {
+      "file": "correct_04.png",
+      "correct": true,
+      "true_class": 1,
+      "predicted_class": 1,
+      "true_label": "background",
+      "predicted_label": "background"
+    },
+    {
+      "file": "correct_05.png",
+      "correct": true,
+      "true_class": 1,
+      "predicted_class": 1,
+      "true_label": "background",
+      "predicted_label": "background"
+    },
+    {
+      "file": "correct_06.png",
+      "correct": true,
+      "true_class": 1,
+      "predicted_class": 1,
+      "true_label": "background",
+      "predicted_label": "background"
+    },
+    {
+      "file": "correct_07.png",
+      "correct": true,
+      "true_class": 1,
+      "predicted_class": 1,
+      "true_label": "background",
+      "predicted_label": "background"
+    },
+    {
+      "file": "correct_08.png",
+      "correct": true,
+      "true_class": 1,
+      "predicted_class": 1,
+      "true_label": "background",
+      "predicted_label": "background"
+    },
+    {
+      "file": "correct_09.png",
+      "correct": true,
+      "true_class": 1,
+      "predicted_class": 1,
+      "true_label": "background",
+      "predicted_label": "background"
+    },
+    {
+      "file": "correct_10.png",
+      "correct": true,
+      "true_class": 1,
+      "predicted_class": 1,
+      "true_label": "background",
+      "predicted_label": "background"
+    }
+  ]
+}

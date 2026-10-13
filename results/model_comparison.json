@@ -1,0 +1,76 @@
+{
+  "baseline_cnn": {
+    "accuracy": 0.6753481894150418,
+    "precision_macro": 0.6103993765383202,
+    "recall_macro": 0.5947566277071725,
+    "f1_macro": 0.5923166853115942,
+    "model": "BaselineCNN",
+    "epochs": 1,
+    "batch_size": 1024,
+    "learning_rate": 0.001,
+    "seed": 42,
+    "device": "cpu",
+    "training_time_seconds": 776.6059979999991,
+    "num_parameters": 422089,
+    "history": [
+      {
+        "epoch": 1,
+        "train_loss": 1.5876149561220902,
+        "val_accuracy": 0.6124550179928029,
+        "val_precision_macro": 0.5994711453454454,
+        "val_recall_macro": 0.6003623410552229,
+        "val_f1_macro": 0.5857137339360418
+      }
+    ]
+  },
+  "resnet18": {
+    "accuracy": 0.0625,
+    "precision_macro": 0.006944444444444444,
+    "recall_macro": 0.1111111111111111,
+    "f1_macro": 0.013071895424836602,
+    "model": "ResNet18",
+    "augmentation": false,
+    "epochs": 1,
+    "batch_size": 32,
+    "learning_rate": 0.001,
+    "seed": 42,
+    "device": "cpu",
+    "training_time_seconds": 21.960641400000895,
+    "num_parameters": 11173449,
+    "history": [
+      {
+        "epoch": 1,
+        "train_loss": 2.398012638092041,
+        "val_accuracy": 0.0625,
+        "val_precision_macro": 0.006944444444444444,
+        "val_recall_macro": 0.1111111111111111,
+        "val_f1_macro": 0.013071895424836602
+      }
+    ]
+  },
+  "resnet18_aug": {
+    "accuracy": 0.0625,
+    "precision_macro": 0.006944444444444444,
+    "recall_macro": 0.1111111111111111,
+    "f1_macro": 0.013071895424836602,
+    "model": "ResNet18",
+    "augmentation": true,
+    "epochs": 1,
+    "batch_size": 32,
+    "learning_rate": 0.001,
+    "seed": 42,
+    "device": "cpu",
+    "training_time_seconds": 34.67037949999212,
+    "num_parameters": 11173449,
+    "history": [
+      {
+        "epoch": 1,
+        "train_loss": 2.4065699577331543,
+        "val_accuracy": 0.0625,
+        "val_precision_macro": 0.006944444444444444,
+        "val_recall_macro": 0.1111111111111111,
+        "val_f1_macro": 0.013071895424836602
+      }
+    ]
+  }
+}
