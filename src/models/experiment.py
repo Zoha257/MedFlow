@@ -19,14 +19,17 @@ def init_experiment_table() -> None:
         with connection.cursor() as cursor:
             cursor.execute(
                 """
-                CREATE TABLE IF NOT EXISTS experiments (
-                    id SERIAL PRIMARY KEY,
-                    experiment_name VARCHAR(255) NOT NULL,
-                    model_name VARCHAR(255) NOT NULL,
-                    augmentation BOOLEAN NOT NULL,
-                    metrics JSONB NOT NULL,
-                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-                )
+                ALTER TABLE experiments
+                    ADD COLUMN IF NOT EXISTS learning_rate DOUBLE PRECISION,
+                    ADD COLUMN IF NOT EXISTS batch_size INTEGER,
+                    ADD COLUMN IF NOT EXISTS epochs INTEGER,
+                    ADD COLUMN IF NOT EXISTS accuracy DOUBLE PRECISION,
+                    ADD COLUMN IF NOT EXISTS precision_macro DOUBLE PRECISION,
+                    ADD COLUMN IF NOT EXISTS recall_macro DOUBLE PRECISION,
+                    ADD COLUMN IF NOT EXISTS f1_score DOUBLE PRECISION,
+                    ADD COLUMN IF NOT EXISTS training_time_seconds DOUBLE PRECISION,
+                    ADD COLUMN IF NOT EXISTS inference_time_seconds DOUBLE PRECISION,
+                    ADD COLUMN IF NOT EXISTS num_parameters BIGINT
                 """
             )
         connection.commit()
@@ -44,9 +47,33 @@ def record_experiment(
             cursor.execute(
                 """
                 INSERT INTO experiments
-                    (experiment_name, model_name, augmentation, metrics)
-                VALUES (%s, %s, %s, %s::jsonb)
+                    (
+                        experiment_name, model_name, augmentation,
+                        learning_rate, batch_size, epochs,
+                        accuracy, precision_macro, recall_macro, f1_score,
+                        training_time_seconds, inference_time_seconds,
+                        num_parameters, metrics
+                    )
+                VALUES (
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                    %s::jsonb
+                )
                 """,
-                (experiment_name, model_name, augmentation, json.dumps(metrics)),
+                (
+                    experiment_name,
+                    model_name,
+                    augmentation,
+                    metrics.get("learning_rate"),
+                    metrics.get("batch_size"),
+                    metrics.get("epochs"),
+                    metrics.get("accuracy"),
+                    metrics.get("precision_macro"),
+                    metrics.get("recall_macro"),
+                    metrics.get("f1_macro"),
+                    metrics.get("training_time_seconds"),
+                    metrics.get("inference_time_seconds"),
+                    metrics.get("num_parameters"),
+                    json.dumps(metrics),
+                ),
             )
         connection.commit()

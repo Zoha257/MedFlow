@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import base64
 import io
+import logging
 import os
 from functools import lru_cache
 from pathlib import Path
 from typing import Annotated
 
 import numpy as np
+import psycopg2
 import torch
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from PIL import Image, UnidentifiedImageError
@@ -15,6 +17,9 @@ from torchvision import transforms
 
 from src.models.gradcam import GradCAM
 from src.models.resnet import create_resnet18
+from src.database.db import record_prediction
+
+logger = logging.getLogger(__name__)
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 DEFAULT_CHECKPOINT = ROOT_DIR / "models" / "resnet18.pth"
@@ -113,6 +118,19 @@ def np_clip_uint8(values: np.ndarray) -> np.ndarray:
     return np.clip(values, 0, 255).astype("uint8")
 
 
+def maybe_record_prediction(predicted_class: int, confidence: float) -> None:
+    if os.getenv("MEDFLOW_PERSIST_PREDICTIONS", "").lower() not in {"1", "true", "yes"}:
+        return
+    try:
+        record_prediction(
+            predicted_class=predicted_class,
+            confidence=confidence,
+            model_version="resnet18-v1",
+        )
+    except psycopg2.Error:
+        logger.warning("Prediction was served but could not be persisted to PostgreSQL.")
+
+
 @lru_cache(maxsize=1)
 def get_model_service() -> ModelService:
     configured_checkpoint = os.getenv("MEDFLOW_MODEL_CHECKPOINT")
@@ -150,10 +168,14 @@ def health() -> dict[str, str]:
 @app.post("/predict")
 async def predict(file: Annotated[UploadFile, File(...)]) -> dict[str, object]:
     image = await read_image(file)
-    return service_or_error().predict(image)
+    result = service_or_error().predict(image)
+    maybe_record_prediction(int(result["predicted_class"]), float(result["confidence"]))
+    return result
 
 
 @app.post("/explain")
 async def explain(file: Annotated[UploadFile, File(...)]) -> dict[str, object]:
     image = await read_image(file)
-    return service_or_error().explain(image)
+    result = service_or_error().explain(image)
+    maybe_record_prediction(int(result["predicted_class"]), float(result["confidence"]))
+    return result

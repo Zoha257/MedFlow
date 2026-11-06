@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 from typing import Dict, Iterable, Tuple
 
@@ -27,6 +28,7 @@ def evaluate_model(
     predictions: list[int] = []
     targets: list[int] = []
 
+    started = time.perf_counter()
     with torch.inference_mode():
         for images, labels in loader:
             logits = model(images.to(device))
@@ -46,6 +48,7 @@ def evaluate_model(
         "precision_macro": float(precision),
         "recall_macro": float(recall),
         "f1_macro": float(f1),
+        "inference_time_seconds": time.perf_counter() - started,
     }
     return metrics, matrix
 
