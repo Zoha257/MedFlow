@@ -1,10 +1,11 @@
 import json
+import time
 from pathlib import Path
 
 from medmnist import PathMNIST
 from torchvision import transforms
 
-from src.database.db import populate_dataset_metadata
+from src.database.db import populate_dataset_metadata, record_processing_log
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 OUTPUT_DIR = ROOT_DIR / "data" / "processed"
@@ -13,6 +14,7 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 def download_dataset():
     print("Downloading PathMNIST...")
+    started = time.perf_counter()
 
     train_dataset = PathMNIST(
         split="train",
@@ -61,6 +63,15 @@ def download_dataset():
 
     try:
         populate_dataset_metadata("PathMNIST", summary)
+        elapsed = time.perf_counter() - started
+        for split, split_summary in summary.items():
+            record_processing_log(
+                dataset_name="PathMNIST",
+                split=split,
+                operation="download_and_preprocess",
+                samples_processed=int(split_summary["num_samples"]),
+                processing_time_seconds=elapsed,
+            )
     except Exception as exc:  # pragma: no cover - runtime-only fallback when PostgreSQL is unavailable.
         print(f"PostgreSQL metadata storage skipped: {exc}")
         print("If PostgreSQL is running locally, set POSTGRES_* values in .env and rerun python -m src.database.db")

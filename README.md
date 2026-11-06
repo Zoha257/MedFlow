@@ -1,65 +1,193 @@
 # MedFlow-XAI
 
-This project implements the Day 1 milestone of the MedFlow-XAI handover: data acquisition, validation, preprocessing, and dataset metadata tracking for the PathMNIST dataset.
+MedFlow-XAI is an explainable, data-centric research pipeline for
+classifying histopathology image patches from the official
+[MedMNIST PathMNIST](https://medmnist.com/) dataset. It combines dataset
+validation and preprocessing, PyTorch training and evaluation, Grad-CAM
+visual explanations, a FastAPI inference service, and a Streamlit research
+dashboard.
 
-## Day 1 goal
+> **Research and educational use only.** This project is not a clinical
+> diagnostic device and its predictions must not be used for medical
+> decision-making.
 
-The Day 1 success condition from the handover is:
+## Project status
 
-- `python -m src.data.download` works
-- the dataset is downloaded
-- preprocessing works
-- PostgreSQL contains dataset metadata
-- the codebase is reproducible and committed
+The core seven-day implementation is present and the automated test suite
+currently passes: **12 tests passed**.
 
-## Project structure
+| Requirement area | Status | Evidence |
+| --- | --- | --- |
+| PathMNIST download, validation, and preprocessing | Implemented | `src/data/` and `data/processed/dataset_summary.json` |
+| PostgreSQL dataset metadata | Implemented | `src/database/db.py` creates `dataset_records` |
+| Baseline CNN and evaluation | Implemented | `src/models/train.py`, `results/results.json` |
+| ResNet18 and augmentation comparison | Implemented as smoke experiments | `src/models/train_day3.py`, `results/model_comparison.json` |
+| MLflow experiment tracking | Implemented | `mlflow.db` and Day 3 training script |
+| Grad-CAM generation and analysis | Implemented | `src/models/generate_gradcam.py`, `research/gradcam_analysis.md` |
+| FastAPI prediction and explanation API | Implemented | `/health`, `/predict`, and `/explain` |
+| Streamlit dashboard | Implemented | `src/app.py` |
+| Docker image for API/frontend | Implemented | `Dockerfile` and `docker-compose.yml` |
+| PostgreSQL metadata, processing logs, experiments, and predictions | Implemented | `src/database/db.py` and `src/models/experiment.py` |
+| Docker Compose PostgreSQL service | Implemented | `docker-compose.yml` |
+| Repository license and reproducibility documentation | Implemented | `LICENSE` and `notebooks/README.md` |
 
-- `src/data/` — dataset download, validation, and preprocessing scripts
-- `src/models/` — baseline CNN, training, and evaluation code
-- `src/database/` — PostgreSQL setup and metadata insertion utilities
-- `data/raw/` — raw dataset data from MedMNIST
-- `data/processed/` — normalized and processed dataset outputs
-- `results/` — evaluation metrics and confusion matrix
+The implementation is therefore suitable as a reproducible research prototype,
+but it should not be described as a fully completed production or clinical
+system.
 
-## Quick start
+## Problem and motivation
 
-1. Create and activate a virtual environment.
-2. Install requirements:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Configure PostgreSQL in `.env` (copy from `.env.example`).
-4. Start PostgreSQL locally.
-5. Run:
-   ```bash
-   python -m src.data.download
-   python -m src.data.validate
-   python -m src.data.preprocess
-   python -m src.database.db
-   ```
+Medical-image classifiers can produce useful predictions while remaining
+difficult to inspect or reproduce. MedFlow-XAI addresses this by connecting
+the full workflow:
 
-## PostgreSQL configuration
-
-Copy the example file and adjust values for your local database:
-
-```bash
-cp .env.example .env
+```text
+PathMNIST -> validation -> preprocessing -> training -> evaluation
+                                      -> Grad-CAM explanation
+                                      -> FastAPI -> Streamlit dashboard
 ```
 
-Example variables:
+The project records dataset metadata, compares a simple CNN with ResNet18
+experiments, exposes confidence and class probabilities, and provides a
+visual attribution map for research inspection.
 
-```env
-POSTGRES_DB=medflow
-POSTGRES_USER=medflow
-POSTGRES_PASSWORD=medflow
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
+## Research question
+
+> Can a data-centric and explainable AI pipeline improve the reliability and
+> interpretability of lightweight medical-image classification systems?
+
+The current artifacts demonstrate the pipeline and its failure modes. They do
+not establish clinical reliability or prove that augmentation improves model
+quality.
+
+## Dataset
+
+The project uses the official **PathMNIST** split from MedMNIST:
+
+- 9 tissue classes
+- 28 x 28 RGB images
+- 89,996 training images
+- 10,004 validation images
+- 7,180 test images
+
+The dataset is downloaded at runtime and is intentionally excluded from Git.
+The checked-in summary is in
+[`data/processed/dataset_summary.json`](data/processed/dataset_summary.json).
+
+## Repository structure
+
+```text
+src/
+  data/             Download, validation, and preprocessing
+  database/         PostgreSQL dataset metadata utilities
+  models/           CNN, ResNet18, training, evaluation, and Grad-CAM
+  api/              FastAPI inference service
+  research/         Reproducible research-artifact generation
+  app.py            Streamlit dashboard
+tests/              Pytest tests for data, models, Grad-CAM, and API behavior
+models/             Trained checkpoint(s)
+results/            Metrics, comparisons, and confusion matrices
+paper/figures/      Research figures and Grad-CAM examples
+research/           Grad-CAM analysis and research report
 ```
 
-### Windows portable PostgreSQL setup
+## Requirements
 
-If PostgreSQL is installed with Scoop, initialize and start a user-owned server
-without requiring administrator access:
+- Python 3.11 or newer
+- PostgreSQL for dataset metadata
+- Docker Desktop (optional, for the containerized API/frontend)
+
+## Quick start on Windows
+
+From PowerShell, open the repository directory:
+
+```powershell
+cd "C:\Users\My PC\Desktop\MedFlow"
+```
+
+The repository includes a virtual environment named `medflow_env`. Activate
+it before running the application:
+
+```powershell
+.\medflow_env\Scripts\Activate.ps1
+```
+
+If PowerShell prevents virtual-environment activation, use the environment's
+Python directly in the commands below:
+
+```powershell
+.\medflow_env\Scripts\python.exe -m streamlit run src/app.py
+```
+
+### Start the Streamlit dashboard
+
+```powershell
+python -m streamlit run src/app.py
+```
+
+Open [http://localhost:8501](http://localhost:8501) in your browser and
+upload a PNG, JPG, JPEG, or BMP tissue image.
+
+### Start the FastAPI service
+
+Open a second PowerShell window, move to the repository directory, and
+activate the environment again:
+
+```powershell
+cd "C:\Users\My PC\Desktop\MedFlow"
+.\medflow_env\Scripts\Activate.ps1
+python -m uvicorn src.api.main:app --reload
+```
+
+Open the interactive API documentation at
+[http://localhost:8000/docs](http://localhost:8000/docs). The health endpoint
+is available at [http://localhost:8000/health](http://localhost:8000/health).
+
+The API and dashboard can run independently. The dashboard performs local
+inference using the checked-in ResNet18 checkpoint.
+
+Install Python dependencies in a virtual environment:
+
+```powershell
+py -3.13 -m venv medflow_env
+.\medflow_env\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+If PowerShell prevents activation, run the commands with the environment's
+Python directly:
+
+```powershell
+.\medflow_env\Scripts\python.exe -m pip install -r requirements.txt
+```
+
+## Reproduce the data pipeline
+
+Copy the environment template and update the PostgreSQL values if needed:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Then run:
+
+```powershell
+python -m src.data.download
+python -m src.data.validate
+python -m src.data.preprocess
+python -m src.database.db
+```
+
+The download command obtains PathMNIST and writes the dataset summary. The
+database command creates `dataset_records`, `processing_logs`, `experiments`,
+and `predictions` tables; it does not store image data. Prediction persistence
+is opt-in through `MEDFLOW_PERSIST_PREDICTIONS=true`.
+
+### PostgreSQL
+
+PostgreSQL can be started automatically by Docker Compose. For a local
+installation, use a user-owned setup such as:
 
 ```powershell
 scoop install postgresql
@@ -68,127 +196,280 @@ $data = "$env:USERPROFILE\postgres-data-medflow"
 & "$pg\initdb.exe" -D $data -U medflow --auth=trust
 & "$pg\pg_ctl.exe" -D $data -l "$data\server.log" -o "-p 5432" start
 & "$pg\psql.exe" -h localhost -p 5432 -U medflow -d postgres -c "CREATE DATABASE medflow;"
-```
-
-Then run the metadata pipeline:
-
-```powershell
 python -m src.database.db
 ```
 
-## Day 2 baseline model
+## Train and evaluate
 
-The Day 2 pipeline trains a deterministic PyTorch CNN baseline and records
-accuracy, macro precision, macro recall, macro F1, training time, parameter
-count, and a confusion matrix:
+Train the deterministic baseline CNN:
 
 ```powershell
 python -m src.models.train --epochs 1 --batch-size 1024
 ```
 
-Outputs:
+This writes `models/baseline_model.pth`, `results/results.json`, and
+`results/confusion_matrix.png`.
 
-- `models/baseline_model.pth`
-- `results/results.json`
-- `results/confusion_matrix.png`
-
-The checked-in full-dataset run used one epoch, seed `42`, and CPU execution.
-Its measured test accuracy was `0.6753` and macro F1 was `0.5923`. These are
-reported measurements from the run, not target or fabricated values.
-
-## Day 3 ResNet18 experiments
-
-Day 3 compares the measured Day 2 `BaselineCNN` run with two ResNet18
-experiments: one without augmentation and one with horizontal/vertical flips
-and 15-degree rotations applied to the training split. The script records each
-run in MLflow, stores experiment metadata in PostgreSQL when it is available,
-and writes the comparison to `results/model_comparison.json`.
-
-Run the baseline first if `results/results.json` does not exist, then run:
+Run the ResNet18 comparison:
 
 ```powershell
-python -m src.models.train --epochs 1 --batch-size 1024
 python -m src.models.train_day3 --epochs 1 --batch-size 1024 --experiment all
 ```
 
-Use `--max-samples` only for a smoke test; those metrics must not be presented
-as the full-dataset comparison. The generated comparison contains the actual
-accuracy, macro F1, and training time for `BaselineCNN`, `ResNet18`, and
-`ResNet18 + Aug`.
+This records runs in MLflow and writes
+`results/model_comparison.json`. Use `--max-samples` only for a smoke test.
+Metrics from smoke tests must not be presented as full-dataset results.
 
-## Day 4 Grad-CAM explanations
+### Checked-in measured results
 
-Generate ten correct and ten incorrect ResNet18 explanations from the test
-split after the full Day 3 checkpoint has been trained:
+The baseline result was a one-epoch CPU run over the full dataset:
+
+| Model | Accuracy | Macro F1 | Training time |
+| --- | ---: | ---: | ---: |
+| BaselineCNN | 0.6753 | 0.5923 | 776.61 s |
+| ResNet18 | 0.0625 | 0.0131 | 21.96 s |
+| ResNet18 + augmentation | 0.0625 | 0.0131 | 34.67 s |
+
+The ResNet18 rows are explicitly **smoke-run results** (one epoch and a
+small evaluation sample), not evidence that the ResNet model is production
+ready or better than the baseline. See
+[`results/model_comparison.json`](results/model_comparison.json) for the
+complete recorded metrics.
+
+## Grad-CAM explanations
+
+After training the full ResNet18 checkpoint, generate ten correct and ten
+incorrect test examples:
 
 ```powershell
 python -m src.models.generate_gradcam
 ```
 
-This creates `paper/figures/correct_01.png` through `correct_10.png`,
-`wrong_01.png` through `wrong_10.png`, a `manifest.json`, and
-`research/gradcam_analysis.md`. The report describes the observed examples
-without treating Grad-CAM as clinical evidence.
+The command creates:
 
-## Day 5 FastAPI service
+- `paper/figures/correct_01.png` through `correct_10.png`
+- `paper/figures/wrong_01.png` through `wrong_10.png`
+- `paper/figures/manifest.json`
+- `research/gradcam_analysis.md`
 
-The Day 5 service exposes the trained ResNet18 model through:
+Grad-CAM is an attribution aid for model inspection. It is not proof that a
+highlighted region is clinically meaningful.
 
-- `GET /health` — model and device readiness
-- `POST /predict` — class, confidence, and all class probabilities
-- `POST /explain` — prediction plus a base64-encoded Grad-CAM overlay
+## FastAPI service
 
-Run locally:
+Start the API locally:
 
 ```powershell
 python -m uvicorn src.api.main:app --reload
 ```
 
-The API expects an image upload in a multipart field named `file`. The service
-resizes inputs to the PathMNIST 28x28 format and limits uploads to 10 MB.
-It is a research/educational classifier, not a clinical diagnostic tool.
+Available endpoints:
 
-Run with Docker:
+- `GET /health` — model and device readiness
+- `POST /predict` — predicted class, confidence, and all class probabilities
+- `POST /explain` — prediction plus a base64-encoded Grad-CAM PNG overlay
+
+Uploads use a multipart field named `file`. Inputs are converted to RGB,
+resized to 28 x 28, and limited to 10 MB. Interactive documentation is
+available at `http://localhost:8000/docs`.
+
+Example request:
 
 ```powershell
-docker compose up --build
+curl.exe -X POST "http://localhost:8000/predict" `
+  -F "file=@path\to\image.png"
 ```
 
-The API is then available at `http://localhost:8000`; interactive API
-documentation is available at `http://localhost:8000/docs`.
+## Streamlit dashboard
 
-## Day 6 Streamlit application
-
-Run the interactive frontend locally:
+Start the dashboard in a second terminal:
 
 ```powershell
 python -m streamlit run src/app.py
 ```
 
-The frontend supports the Day 6 flow:
+The dashboard supports:
 
-```text
-Upload image -> prediction -> probability chart -> Grad-CAM -> explanation
+1. Image upload
+2. Predicted tissue class and confidence
+3. Class-probability chart
+4. Grad-CAM overlay
+5. Research-use disclaimer
+
+The API and dashboard are separate local processes. The dashboard performs
+local inference using the same checkpoint and preprocessing implementation.
+
+## Docker
+
+Build and start the API and frontend:
+
+```powershell
+docker compose up --build
 ```
 
-It uses the same ResNet18 checkpoint and preprocessing as the FastAPI service.
-The API and Streamlit app are separate processes; run the API independently
-when integrating them with another client.
+Then open:
 
-## Day 7 research report
+- API: `http://localhost:8000`
+- API docs: `http://localhost:8000/docs`
+- Streamlit: `http://localhost:8501`
 
-The research report is available at
-[`research/report.md`](research/report.md). Generate the dataset distribution,
-training curves, model comparison, and architecture figures with:
+The Compose stack includes PostgreSQL with a health check and persistent
+`postgres_data` volume. Set `MEDFLOW_PERSIST_PREDICTIONS=true` in `.env` if API
+predictions should be written to the `predictions` table.
+
+## Testing
+
+Run the test suite:
+
+```powershell
+python -m pytest -q
+```
+
+The current repository result is **12 passed**. Tests cover dataset helpers,
+preprocessing, model behavior, evaluation, Grad-CAM, and all three API
+endpoints plus invalid uploads.
+
+## Push this project to GitHub
+
+The following steps publish your local changes to the configured GitHub
+repository. Run them from the repository directory in PowerShell.
+
+### 1. Check what will be published
+
+```powershell
+git status
+git remote -v
+git diff --stat
+```
+
+Do not commit `.env`, passwords, API keys, or other secrets. The local
+`.env` file and the virtual environment are ignored by Git. Review any
+untracked files before staging them.
+
+### 2. Stage the project files
+
+To stage all current project changes:
+
+```powershell
+git add .
+git status
+```
+
+If a file contains private information, unstage it before continuing:
+
+```powershell
+git restore --staged path\to\private-file
+```
+
+### 3. Create a commit
+
+```powershell
+git commit -m "Document project setup and startup commands"
+```
+
+If Git asks for your identity, configure it once with your own GitHub name
+and email:
+
+```powershell
+git config --global user.name "Your Name"
+git config --global user.email "your-email@example.com"
+```
+
+Then run the `git commit` command again.
+
+### 4. Push to GitHub
+
+Check the current branch:
+
+```powershell
+git branch --show-current
+```
+
+For the current `master` branch, push with:
+
+```powershell
+git push -u origin master
+```
+
+If your branch is named `main`, use:
+
+```powershell
+git push -u origin main
+```
+
+GitHub may open a browser sign-in flow or request a personal access token.
+Do not use your GitHub account password as a Git password.
+
+### 5. Confirm the upload
+
+```powershell
+git status
+git log -1 --oneline
+```
+
+Refresh [github.com/Zoha257/MedFlow](https://github.com/Zoha257/MedFlow) to
+see the commit. For future updates, repeat:
+
+```powershell
+git add .
+git commit -m "Describe your change"
+git push
+```
+
+## Reproducibility workflows
+
+The handover's planned notebook workflows are documented in
+[`notebooks/README.md`](notebooks/README.md). The project intentionally uses
+versioned command-line modules instead of stateful notebook files.
+
+## Research artifacts
+
+The repository contains:
+
+- [`research/report.md`](research/report.md) — research report
+- [`research/gradcam_analysis.md`](research/gradcam_analysis.md) — explanation
+  and error analysis
+- [`paper/figures/dataset_distribution.png`](paper/figures/dataset_distribution.png)
+- [`paper/figures/training_curves.png`](paper/figures/training_curves.png)
+- [`paper/figures/model_comparison.png`](paper/figures/model_comparison.png)
+- [`paper/figures/architecture.png`](paper/figures/architecture.png)
+- [`results/confusion_matrix.png`](results/confusion_matrix.png)
+
+Regenerate the dataset and research figures with:
 
 ```powershell
 python -m src.research.generate_artifacts
 ```
 
-The report uses only measured artifacts and explicitly labels the current
-ResNet results as smoke runs. It does not claim clinical utility.
+### Visual previews
 
-## Notes
+Architecture:
 
-- The project is intended for research/educational use only and is not a clinical diagnostic system.
-- Dataset files are not stored in GitHub; the official MedMNIST distribution is used.
+![MedFlow-XAI architecture](paper/figures/architecture.png)
+
+Example Grad-CAM output:
+
+![Grad-CAM example](paper/figures/correct_01.png)
+
+## Limitations and future work
+
+The core handover requirements are implemented, but the project remains a
+research prototype:
+
+1. The checked-in ResNet18 comparison is a one-epoch smoke experiment and
+   should be rerun with the intended training budget before drawing model
+   quality conclusions.
+2. The current research artifacts do not constitute clinical validation.
+3. Add screenshots or a short demo link when publishing the GitHub repository.
+
+The current ResNet results are not suitable for clinical or performance claims,
+and the project has not been clinically validated.
+
+## Citations
+
+- Yang et al., “MedMNIST v2: A Large-Scale Lightweight Benchmark for
+  2D/3D Biomedical Image Classification,”
+  [MedMNIST repository](https://github.com/MedMNIST/MedMNIST).
+- Selvaraju et al., “Grad-CAM: Visual Explanations from Deep Networks via
+  Gradient-based Localization,”
+  [arXiv:1610.02391](https://arxiv.org/abs/1610.02391).

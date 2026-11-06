@@ -71,6 +71,53 @@ def init_database() -> None:
                 )
                 """
             )
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS processing_logs (
+                    id SERIAL PRIMARY KEY,
+                    dataset_name VARCHAR(255) NOT NULL,
+                    split VARCHAR(50) NOT NULL,
+                    operation VARCHAR(255) NOT NULL,
+                    samples_processed INTEGER NOT NULL,
+                    processing_time_seconds DOUBLE PRECISION NOT NULL,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS experiments (
+                    id SERIAL PRIMARY KEY,
+                    experiment_name VARCHAR(255) NOT NULL,
+                    model_name VARCHAR(255) NOT NULL,
+                    augmentation BOOLEAN NOT NULL DEFAULT FALSE,
+                    learning_rate DOUBLE PRECISION,
+                    batch_size INTEGER,
+                    epochs INTEGER,
+                    accuracy DOUBLE PRECISION,
+                    precision_macro DOUBLE PRECISION,
+                    recall_macro DOUBLE PRECISION,
+                    f1_score DOUBLE PRECISION,
+                    training_time_seconds DOUBLE PRECISION,
+                    inference_time_seconds DOUBLE PRECISION,
+                    num_parameters BIGINT,
+                    metrics JSONB NOT NULL DEFAULT '{}'::jsonb,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS predictions (
+                    id SERIAL PRIMARY KEY,
+                    image_id VARCHAR(255),
+                    predicted_class INTEGER NOT NULL,
+                    confidence DOUBLE PRECISION NOT NULL,
+                    model_version VARCHAR(255) NOT NULL,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
             connection.commit()
 
     print(f"PostgreSQL database initialized: {database_name}")
@@ -118,6 +165,54 @@ def populate_dataset_metadata(dataset_name: str, summary: Dict[str, Any]) -> Non
         )
 
     print(f"Stored dataset metadata for {dataset_name} in PostgreSQL.")
+
+
+def record_processing_log(
+    dataset_name: str,
+    split: str,
+    operation: str,
+    samples_processed: int,
+    processing_time_seconds: float,
+) -> None:
+    init_database()
+    with get_connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO processing_logs (
+                    dataset_name, split, operation, samples_processed,
+                    processing_time_seconds
+                ) VALUES (%s, %s, %s, %s, %s)
+                """,
+                (
+                    dataset_name,
+                    split,
+                    operation,
+                    samples_processed,
+                    processing_time_seconds,
+                ),
+            )
+        connection.commit()
+
+
+def record_prediction(
+    predicted_class: int,
+    confidence: float,
+    model_version: str,
+    image_id: Optional[str] = None,
+) -> None:
+    init_database()
+    with get_connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO predictions (
+                    image_id, predicted_class, confidence, model_version
+                ) VALUES (%s, %s, %s, %s)
+                """,
+                (image_id, predicted_class, confidence, model_version),
+            )
+        connection.commit()
 
 
 def main() -> None:

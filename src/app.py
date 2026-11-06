@@ -17,10 +17,10 @@ st.markdown(
     @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
     :root { --ink:#0b1220; --muted:#647084; --line:#e5e9ee; --mint:#c7f7df; --blue:#4d6fff; }
     .stApp { background:#f6f8fa; color:var(--ink); }
-    .block-container { max-width:1180px; padding:1.25rem 2.5rem 4rem; }
+    .block-container { max-width:1180px; padding:4.25rem 2.5rem 4rem; }
     h1,h2,h3,p,div,button,label { font-family:'DM Sans',sans-serif; }
     h1,h2,h3 { font-family:'Space Grotesk',sans-serif; letter-spacing:-.04em; }
-    .topbar { align-items:center; display:flex; justify-content:space-between; padding:.8rem 0 1.8rem; }
+    .topbar { align-items:center; display:flex; justify-content:space-between; padding:.35rem 0 1.8rem; }
     .brand { align-items:center; display:flex; gap:.7rem; }
     .brand-mark { align-items:center; background:var(--ink); border-radius:12px; color:var(--mint); display:flex; height:38px; justify-content:center; width:38px; }
     .brand-name { font-family:'Space Grotesk'; font-size:1.05rem; font-weight:700; }
@@ -51,7 +51,7 @@ st.markdown(
     .result-value { color:var(--ink); margin:.35rem 0 0; }
     .disclaimer { background:#fff8e9; border:1px solid #f1dfb5; border-radius:14px; color:#765d2d; font-size:.82rem; line-height:1.55; margin-top:2rem; padding:.85rem 1rem; }
     .footer { border-top:1px solid var(--line); color:#8490a0; font-size:.78rem; margin-top:4rem; padding-top:1.2rem; }
-    @media (max-width:640px) { .block-container { padding:.8rem 1rem 3rem; } .topbar-note { display:none; } .hero { border-radius:20px; } .hero h1 { font-size:3.1rem; } }
+    @media (max-width:640px) { .block-container { padding:3.75rem 1rem 3rem; } .topbar-note { display:none; } .hero { border-radius:20px; } .hero h1 { font-size:3.1rem; } }
     </style>
     """,
     unsafe_allow_html=True,
