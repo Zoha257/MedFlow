@@ -11,30 +11,6 @@ dashboard.
 > diagnostic device and its predictions must not be used for medical
 > decision-making.
 
-## Project status
-
-The core seven-day implementation is present and the automated test suite
-currently passes: **12 tests passed**.
-
-| Requirement area | Status | Evidence |
-| --- | --- | --- |
-| PathMNIST download, validation, and preprocessing | Implemented | `src/data/` and `data/processed/dataset_summary.json` |
-| PostgreSQL dataset metadata | Implemented | `src/database/db.py` creates `dataset_records` |
-| Baseline CNN and evaluation | Implemented | `src/models/train.py`, `results/results.json` |
-| ResNet18 and augmentation comparison | Implemented as smoke experiments | `src/models/train_day3.py`, `results/model_comparison.json` |
-| MLflow experiment tracking | Implemented | `mlflow.db` and Day 3 training script |
-| Grad-CAM generation and analysis | Implemented | `src/models/generate_gradcam.py`, `research/gradcam_analysis.md` |
-| FastAPI prediction and explanation API | Implemented | `/health`, `/predict`, and `/explain` |
-| Streamlit dashboard | Implemented | `src/app.py` |
-| Docker image for API/frontend | Implemented | `Dockerfile` and `docker-compose.yml` |
-| PostgreSQL metadata, processing logs, experiments, and predictions | Implemented | `src/database/db.py` and `src/models/experiment.py` |
-| Docker Compose PostgreSQL service | Implemented | `docker-compose.yml` |
-| Repository license and reproducibility documentation | Implemented | `LICENSE` and `notebooks/README.md` |
-
-The implementation is therefore suitable as a reproducible research prototype,
-but it should not be described as a fully completed production or clinical
-system.
-
 ## Problem and motivation
 
 Medical-image classifiers can produce useful predictions while remaining
