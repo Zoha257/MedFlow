@@ -1,13 +1,23 @@
+
 from __future__ import annotations
 
 import base64
 import io
+import sys
+from pathlib import Path
+
+# Ensure the project root is available for imports
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 import pandas as pd
 import streamlit as st
 from PIL import Image
 
 from src.api.main import ModelService, get_model_service
+
 
 st.set_page_config(page_title="MedFlow-XAI", page_icon="✦", layout="wide")
 
@@ -100,7 +110,7 @@ def main() -> None:
     with upload_column:
         st.markdown('<div class="upload-card"><div class="upload-title">Start an analysis</div><div class="upload-copy">Upload one tissue patch to generate a prediction and visual attribution map.</div>', unsafe_allow_html=True)
         uploaded_file = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg", "bmp"], help="Images are converted to RGB and resized to 28 x 28 pixels.", label_visibility="collapsed")
-        st.markdown('<div class="status-row"><span class="status-dot"></span>Local inference · your image stays in this session</div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="status-row"><span class="status-dot"></span>Cloud inference · images processed in your app session</div></div>', unsafe_allow_html=True)
     with context_column:
         st.markdown('<div class="result-card"><div class="result-label">Model context</div><div class="result-value">ResNet18</div><p class="section-copy">Trained on PathMNIST-style histopathology patches across nine tissue classes.</p><p><strong>28 × 28 px</strong> input &nbsp;·&nbsp; <strong>9 classes</strong> output</p></div>', unsafe_allow_html=True)
     if uploaded_file is None:
