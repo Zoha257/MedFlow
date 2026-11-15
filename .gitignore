@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # =========================
 # Python
 # =========================
@@ -49,3 +50,19 @@ Thumbs.db
 *.log
 mlflow.db
 mlruns/
+=======
+﻿# Python cache files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Virtual environments
+medflow_env/
+.venv/
+
+# Local MLflow database
+mlflow.db
+
+# Environment secrets
+.env
+>>>>>>> clean-main

@@ -1,0 +1,20 @@
+{
+  "train": {
+    "num_samples": 89996,
+    "image_height": 28,
+    "image_width": 28,
+    "channels": 3
+  },
+  "val": {
+    "num_samples": 10004,
+    "image_height": 28,
+    "image_width": 28,
+    "channels": 3
+  },
+  "test": {
+    "num_samples": 7180,
+    "image_height": 28,
+    "image_width": 28,
+    "channels": 3
+  }
+}
