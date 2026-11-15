@@ -179,16 +179,12 @@ def log_baseline_experiment(metrics: dict[str, Any]) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run the Day 3 ResNet18 experiments.")
-<<<<<<< HEAD
-    parser.add_argument("--epochs", type=int, default=1)
-=======
     parser.add_argument(
         "--epochs",
         type=int,
         default=10,
         help="Number of full training epochs. Use --epochs 1 only for a smoke test.",
     )
->>>>>>> clean-main
     parser.add_argument("--batch-size", type=int, default=1024)
     parser.add_argument("--learning-rate", type=float, default=1e-3)
     parser.add_argument("--seed", type=int, default=42)
