@@ -186,6 +186,7 @@ python -m src.models.train --epochs 1 --batch-size 1024
 This writes `models/baseline_model.pth`, `results/results.json`, and
 `results/confusion_matrix.png`.
 
+<<<<<<< HEAD
 Run the ResNet18 comparison:
 
 ```powershell
@@ -194,6 +195,17 @@ python -m src.models.train_day3 --epochs 1 --batch-size 1024 --experiment all
 
 This records runs in MLflow and writes
 `results/model_comparison.json`. Use `--max-samples` only for a smoke test.
+=======
+Run the ResNet18 comparison (10 full epochs by default):
+
+```powershell
+python -m src.models.train_day3 --epochs 10 --batch-size 1024 --experiment all
+```
+
+This records runs in MLflow and writes
+`results/model_comparison.json`, per-model metrics, and confusion matrices.
+Use `--epochs 1 --max-samples 1000` only for a smoke test.
+>>>>>>> clean-main
 Metrics from smoke tests must not be presented as full-dataset results.
 
 ### Checked-in measured results
@@ -264,6 +276,7 @@ Start the dashboard in a second terminal:
 python -m streamlit run src/app.py
 ```
 
+<<<<<<< HEAD
 The dashboard supports:
 
 1. Image upload
@@ -271,6 +284,15 @@ The dashboard supports:
 3. Class-probability chart
 4. Grad-CAM overlay
 5. Research-use disclaimer
+=======
+The dashboard is split into Analyze, Evaluation, Comparison, Research, and
+Prediction history pages so the workflow does not become one long scroll.
+Analyze includes built-in sample images, side-by-side original and Grad-CAM
+views, class probabilities, and downloadable prediction reports. History is
+session-only and does not store image bytes. Evaluation and Comparison read
+the saved JSON and PNG artifacts, while Research includes the architecture
+diagram and limitations disclaimer.
+>>>>>>> clean-main
 
 The API and dashboard are separate local processes. The dashboard performs
 local inference using the same checkpoint and preprocessing implementation.
