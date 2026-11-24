@@ -79,8 +79,10 @@ def run_experiment(
     criterion = nn.CrossEntropyLoss()
     history: list[dict[str, float]] = []
     started = time.perf_counter()
+    # Smoke runs (--max-samples) must never overwrite the checkpoint the API serves.
+    run_name = f"{name}_smoke" if max_samples is not None else name
 
-    with mlflow.start_run(run_name=name):
+    with mlflow.start_run(run_name=run_name):
         mlflow.log_params(
             {
                 "model": "ResNet18",
@@ -89,6 +91,7 @@ def run_experiment(
                 "batch_size": batch_size,
                 "learning_rate": learning_rate,
                 "seed": seed,
+                "max_samples": max_samples,
             }
         )
         for epoch in range(1, epochs + 1):
@@ -113,6 +116,7 @@ def run_experiment(
             "batch_size": batch_size,
             "learning_rate": learning_rate,
             "seed": seed,
+            "max_samples": max_samples,  # None = full dataset
             "device": str(device),
             "training_time_seconds": training_seconds,
             "num_parameters": sum(parameter.numel() for parameter in model.parameters()),
@@ -122,14 +126,19 @@ def run_experiment(
         mlflow.log_metric("training_time_seconds", training_seconds)
         mlflow.log_metric("num_parameters", metrics["num_parameters"])
 
-    checkpoint = MODEL_DIR / f"{name}.pth"
+    checkpoint = MODEL_DIR / f"{run_name}.pth"
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
     torch.save(model.state_dict(), checkpoint)
-    output_dir = RESULTS_DIR / name
+    output_dir = RESULTS_DIR / run_name
+    if test_metrics.get("num_predicted_classes", 9) < 9:
+        print(
+            f"WARNING: {run_name} predicted only {test_metrics['num_predicted_classes']} of 9 classes "
+            "on the test split. Treat this run as failed/collapsed, not as a result."
+        )
     save_evaluation_artifacts(metrics, matrix, output_dir)
     (output_dir / "results.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     try:
-        record_experiment(name, "ResNet18", augmentation, metrics)
+        record_experiment(run_name, "ResNet18", augmentation, metrics)
     except psycopg2.Error as exc:
         print(f"PostgreSQL experiment logging skipped: {exc}")
     return metrics
@@ -198,6 +207,11 @@ def main() -> None:
         ["resnet18", "resnet18_aug"] if args.experiment == "all" else [args.experiment]
     )
     baseline_metrics = load_baseline_metrics()
+    if baseline_metrics.get("epochs") != args.epochs:
+        print(
+            f"WARNING: baseline was trained for {baseline_metrics.get('epochs')} epoch(s) but ResNet18 "
+            f"runs use {args.epochs}. Retrain the baseline with the same --epochs for a like-for-like comparison."
+        )
     log_baseline_experiment(baseline_metrics)
     comparison: dict[str, dict[str, Any]] = {"baseline_cnn": baseline_metrics}
     for choice in choices:
@@ -211,11 +225,11 @@ def main() -> None:
             max_samples=args.max_samples,
         )
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    (RESULTS_DIR / "model_comparison.json").write_text(
-        json.dumps(comparison, indent=2),
-        encoding="utf-8",
+    comparison_path = RESULTS_DIR / (
+        "model_comparison_smoke.json" if args.max_samples is not None else "model_comparison.json"
     )
-    print(f"Saved comparison to {RESULTS_DIR / 'model_comparison.json'}")
+    comparison_path.write_text(json.dumps(comparison, indent=2), encoding="utf-8")
+    print(f"Saved comparison to {comparison_path}")
 
 
 if __name__ == "__main__":

@@ -24,6 +24,9 @@ logger = logging.getLogger(__name__)
 ROOT_DIR = Path(__file__).resolve().parents[2]
 DEFAULT_CHECKPOINT = ROOT_DIR / "models" / "resnet18.pth"
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+# Reported in every response and stored with persisted predictions.
+# Bump it (or set MEDFLOW_MODEL_VERSION) whenever the served checkpoint changes.
+MODEL_VERSION = os.getenv("MEDFLOW_MODEL_VERSION", "resnet18-v1")
 CLASS_LABELS = {
     0: "adipose",
     1: "background",
@@ -74,9 +77,13 @@ class ModelService:
         tensor = self.tensor_from_image(image)
         predicted_class, probabilities = self.predict_tensor(tensor)
         return {
+            # Fields required by the handover spec.
+            "prediction": CLASS_LABELS[predicted_class],
+            "confidence": float(probabilities[predicted_class].item()),
+            "model_version": MODEL_VERSION,
+            # Extra detail used by the dashboard.
             "predicted_class": predicted_class,
             "predicted_label": CLASS_LABELS[predicted_class],
-            "confidence": float(probabilities[predicted_class].item()),
             "probabilities": {
                 CLASS_LABELS[index]: float(probability.item())
                 for index, probability in enumerate(probabilities)
@@ -104,11 +111,17 @@ class ModelService:
         overlay[:, :, 2] = np_clip_uint8(image_array[:, :, 2] * 0.55)
         output = io.BytesIO()
         Image.fromarray(overlay).save(output, format="PNG")
+        heatmap_b64 = base64.b64encode(output.getvalue()).decode("ascii")
         return {
+            # Fields required by the handover spec.
+            "prediction": CLASS_LABELS[predicted_class],
+            "confidence": float(probabilities[predicted_class].item()),
+            "heatmap": heatmap_b64,
+            "model_version": MODEL_VERSION,
+            # Extra detail / backwards-compatible aliases.
             "predicted_class": predicted_class,
             "predicted_label": CLASS_LABELS[predicted_class],
-            "confidence": float(probabilities[predicted_class].item()),
-            "heatmap_base64": base64.b64encode(output.getvalue()).decode("ascii"),
+            "heatmap_base64": heatmap_b64,
             "heatmap_size": {"width": 28, "height": 28},
             "device": str(self.device),
         }
@@ -125,7 +138,7 @@ def maybe_record_prediction(predicted_class: int, confidence: float) -> None:
         record_prediction(
             predicted_class=predicted_class,
             confidence=confidence,
-            model_version="resnet18-v1",
+            model_version=MODEL_VERSION,
         )
     except psycopg2.Error:
         logger.warning("Prediction was served but could not be persisted to PostgreSQL.")
@@ -162,7 +175,12 @@ def service_or_error() -> ModelService:
 @app.get("/health")
 def health() -> dict[str, str]:
     service = service_or_error()
-    return {"status": "ok", "model": "ResNet18", "device": str(service.device)}
+    return {
+        "status": "ok",
+        "model": "ResNet18",
+        "model_version": MODEL_VERSION,
+        "device": str(service.device),
+    }
 
 
 @app.post("/predict")

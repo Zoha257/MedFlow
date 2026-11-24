@@ -3,17 +3,21 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
+from src.research.render_results import build_warnings
 from src.ui import RESULTS_DIR, apply_theme, load_json, render_disclaimer
 
 st.set_page_config(page_title="Comparison · MedFlow-XAI", page_icon="✦", layout="wide")
 apply_theme()
 st.title("CNN vs ResNet18")
-st.write("A transparent comparison of the checked-in experiments. Smoke-run results are labeled clearly and should not be treated as production evidence.")
+st.write("A comparison of the saved experiments. Warnings below are computed from the recorded run scope, epochs and predicted-class counts.")
 
 comparison = load_json(RESULTS_DIR / "model_comparison.json")
 if not comparison:
     st.warning("No model comparison artifact found.")
     st.stop()
+
+for warning in build_warnings(comparison):
+    st.warning(warning)
 
 rows = []
 for name, metrics in comparison.items():

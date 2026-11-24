@@ -11,66 +11,50 @@ ROOT_DIR = Path(__file__).resolve().parents[2]
 OUTPUT_DIR = ROOT_DIR / "data" / "processed"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
+SPLITS = ("train", "val", "test")
+
 
 def download_dataset():
     print("Downloading PathMNIST...")
-    started = time.perf_counter()
 
-    train_dataset = PathMNIST(
-        split="train",
-        transform=transforms.ToTensor(),
-        download=True,
-    )
-    val_dataset = PathMNIST(
-        split="val",
-        transform=transforms.ToTensor(),
-        download=True,
-    )
-    test_dataset = PathMNIST(
-        split="test",
-        transform=transforms.ToTensor(),
-        download=True,
-    )
+    summary = {}
+    timings = {}
+    for split in SPLITS:
+        # Time each split on its own so processing_logs reports a meaningful
+        # per-split duration instead of the same total repeated three times.
+        started = time.perf_counter()
+        dataset = PathMNIST(
+            split=split,
+            transform=transforms.ToTensor(),
+            download=True,
+        )
+        first_image = dataset[0][0]
+        summary[split] = {
+            "num_samples": len(dataset),
+            "image_height": first_image.shape[-2],
+            "image_width": first_image.shape[-1],
+            "channels": first_image.shape[0],
+        }
+        timings[split] = time.perf_counter() - started
 
-    summary = {
-        "train": {
-            "num_samples": len(train_dataset),
-            "image_height": train_dataset[0][0].shape[-2],
-            "image_width": train_dataset[0][0].shape[-1],
-            "channels": train_dataset[0][0].shape[0],
-        },
-        "val": {
-            "num_samples": len(val_dataset),
-            "image_height": val_dataset[0][0].shape[-2],
-            "image_width": val_dataset[0][0].shape[-1],
-            "channels": val_dataset[0][0].shape[0],
-        },
-        "test": {
-            "num_samples": len(test_dataset),
-            "image_height": test_dataset[0][0].shape[-2],
-            "image_width": test_dataset[0][0].shape[-1],
-            "channels": test_dataset[0][0].shape[0],
-        },
-    }
     summary_path = OUTPUT_DIR / "dataset_summary.json"
     summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
 
     print("\nPathMNIST downloaded successfully!")
-    print(f"Training samples:   {len(train_dataset)}")
-    print(f"Validation samples: {len(val_dataset)}")
-    print(f"Test samples:       {len(test_dataset)}")
+    for split in SPLITS:
+        print(f"{split:<5} samples: {summary[split]['num_samples']}")
     print(f"Dataset summary saved to: {summary_path}")
 
     try:
+        # Idempotent: re-running updates the existing (dataset, split) rows.
         populate_dataset_metadata("PathMNIST", summary)
-        elapsed = time.perf_counter() - started
         for split, split_summary in summary.items():
             record_processing_log(
                 dataset_name="PathMNIST",
                 split=split,
                 operation="download_and_preprocess",
                 samples_processed=int(split_summary["num_samples"]),
-                processing_time_seconds=elapsed,
+                processing_time_seconds=timings[split],
             )
     except Exception as exc:  # pragma: no cover - runtime-only fallback when PostgreSQL is unavailable.
         print(f"PostgreSQL metadata storage skipped: {exc}")

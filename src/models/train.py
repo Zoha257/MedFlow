@@ -89,7 +89,10 @@ def train_baseline(
     training_seconds = time.perf_counter() - started
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    checkpoint = MODEL_DIR / "baseline_model.pth"
+    # Smoke runs (--max-samples) must never overwrite the real baseline artifacts.
+    smoke = max_samples is not None
+    checkpoint = MODEL_DIR / ("baseline_model_smoke.pth" if smoke else "baseline_model.pth")
+    output_dir = RESULTS_DIR / "baseline_smoke" if smoke else RESULTS_DIR
     torch.save(model.state_dict(), checkpoint)
     metrics = {
         **test_metrics,
@@ -98,15 +101,16 @@ def train_baseline(
         "batch_size": batch_size,
         "learning_rate": learning_rate,
         "seed": seed,
+        "max_samples": max_samples,  # None = full dataset
         "device": str(device),
         "training_time_seconds": training_seconds,
         "num_parameters": sum(parameter.numel() for parameter in model.parameters()),
         "history": history,
     }
-    save_evaluation_artifacts(metrics, matrix, RESULTS_DIR)
-    (RESULTS_DIR / "results.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
+    save_evaluation_artifacts(metrics, matrix, output_dir)
+    (output_dir / "results.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     print(f"Saved model to {checkpoint}")
-    print(f"Saved results to {RESULTS_DIR}")
+    print(f"Saved results to {output_dir}")
     return metrics
 
 

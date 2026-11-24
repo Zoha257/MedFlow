@@ -48,6 +48,8 @@ def evaluate_model(
         "precision_macro": float(precision),
         "recall_macro": float(recall),
         "f1_macro": float(f1),
+        # Number of distinct classes the model ever predicted. 1 means total class collapse.
+        "num_predicted_classes": len(set(predictions)),
         "inference_time_seconds": time.perf_counter() - started,
     }
     return metrics, matrix

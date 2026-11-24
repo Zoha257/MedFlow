@@ -27,7 +27,7 @@ with right:
 st.markdown("### Research limitations")
 st.markdown(
     """
-    - The checked-in ResNet18 results include one-epoch smoke runs; run the multi-epoch command before drawing performance conclusions.
+    - Results are only meaningful when the run scope is the full dataset and models share a training budget; the Comparison page shows warnings computed from the saved files.
     - PathMNIST is a curated research dataset and does not represent clinical deployment conditions or population diversity.
     - Confidence scores are model outputs, not calibrated clinical probabilities.
     - Grad-CAM is an attribution aid; highlighted regions do not prove causal or clinically meaningful reasoning.

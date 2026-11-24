@@ -12,6 +12,9 @@ from psycopg2 import sql
 ROOT_DIR = Path(__file__).resolve().parents[2]
 load_dotenv(ROOT_DIR / ".env")
 
+# init_database() is called from several writers; run the DDL once per process.
+_INITIALIZED = False
+
 
 def get_db_config() -> Dict[str, str]:
     return {
@@ -34,25 +37,33 @@ def ensure_database_exists() -> str:
     config = get_db_config()
     database_name = config["dbname"]
 
-    with psycopg2.connect(
+    connection = psycopg2.connect(
         host=config["host"],
         port=config["port"],
         dbname="postgres",
         user=config["user"],
         password=config["password"],
-    ) as connection:
+    )
+    try:
+        # CREATE DATABASE cannot run inside a transaction block.
+        connection.autocommit = True
         with connection.cursor() as cursor:
             cursor.execute(
                 "SELECT 1 FROM pg_database WHERE datname = %s",
                 (database_name,),
             )
             if cursor.fetchone() is None:
-                cursor.execute(sql.SQL("CREATE DATABASE {}" ).format(sql.Identifier(database_name)))
+                cursor.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(database_name)))
+    finally:
+        connection.close()
 
     return database_name
 
 
-def init_database() -> None:
+def init_database(force: bool = False) -> None:
+    global _INITIALIZED
+    if _INITIALIZED and not force:
+        return
     database_name = ensure_database_exists()
 
     with get_connection(database_name) as connection:
@@ -118,8 +129,26 @@ def init_database() -> None:
                 )
                 """
             )
+            # One metadata row per (dataset, split). Earlier versions inserted a new row on
+            # every run, so remove those duplicates (keep the newest) before adding the index.
+            cursor.execute(
+                """
+                DELETE FROM dataset_records older
+                USING dataset_records newer
+                WHERE older.dataset_name = newer.dataset_name
+                  AND older.split = newer.split
+                  AND older.id < newer.id
+                """
+            )
+            cursor.execute(
+                """
+                CREATE UNIQUE INDEX IF NOT EXISTS dataset_records_dataset_split_key
+                ON dataset_records (dataset_name, split)
+                """
+            )
             connection.commit()
 
+    _INITIALIZED = True
     print(f"PostgreSQL database initialized: {database_name}")
 
 
@@ -143,6 +172,12 @@ def record_dataset_metadata(
                     image_width,
                     channels
                 ) VALUES (%s, %s, %s, %s, %s, %s)
+                ON CONFLICT (dataset_name, split) DO UPDATE SET
+                    num_samples = EXCLUDED.num_samples,
+                    image_height = EXCLUDED.image_height,
+                    image_width = EXCLUDED.image_width,
+                    channels = EXCLUDED.channels,
+                    created_at = CURRENT_TIMESTAMP
                 """,
                 (dataset_name, split, num_samples, image_height, image_width, channels),
             )

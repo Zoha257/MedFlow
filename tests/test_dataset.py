@@ -1,8 +1,12 @@
+import pytest
 from medmnist import PathMNIST
 
 
 def test_pathmnist_splits_have_expected_shape_and_classes() -> None:
-    dataset = PathMNIST(split="test", download=False)
+    try:
+        dataset = PathMNIST(split="test", download=False)
+    except (RuntimeError, FileNotFoundError):
+        pytest.skip("PathMNIST is not downloaded; run `python -m src.data.download` first.")
     image, label = dataset[0]
 
     assert len(dataset) == 7180

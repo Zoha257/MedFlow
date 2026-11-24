@@ -1,68 +1,39 @@
-<<<<<<< HEAD
-# =========================
 # Python
-# =========================
-__pycache__/
-*.py[cod]
-*.pyo
-
-# =========================
-# Virtual Environment
-# =========================
-medflow_env/
-venv/
-.env
-
-# =========================
-# Dataset
-# =========================
-data/raw/
-data/processed/
-
-# =========================
-# Trained Models
-# =========================
-models/*.pth
-models/*.pt
-models/*.onnx
-!models/
-!models/resnet18.pth
-
-# =========================
-# Jupyter
-# =========================
-.ipynb_checkpoints/
-
-# =========================
-# VS Code
-# =========================
-.vscode/
-
-# =========================
-# OS
-# =========================
-.DS_Store
-Thumbs.db
-
-# =========================
-# Logs
-# =========================
-*.log
-mlflow.db
-mlruns/
-=======
-﻿# Python cache files
 __pycache__/
 *.py[cod]
 .pytest_cache/
 
 # Virtual environments
 medflow_env/
+venv/
 .venv/
 
-# Local MLflow database
-mlflow.db
-
-# Environment secrets
+# Secrets
 .env
->>>>>>> clean-main
+
+# Dataset (never commit; MedMNIST downloads it at runtime).
+# The small summary file is the one exception, because the README links to it.
+data/raw/
+data/processed/*
+!data/processed/dataset_summary.json
+
+# Trained models: only the checkpoint served by the API/Docker is tracked.
+# If you need other checkpoints in Git, use Git LFS or GitHub Releases instead.
+models/*.pth
+models/*.pt
+models/*.onnx
+!models/resnet18.pth
+!models/.gitkeep
+
+# Experiment tracking
+mlflow.db
+mlruns/
+
+# Notebooks / editors / OS
+.ipynb_checkpoints/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

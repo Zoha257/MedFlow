@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import streamlit as st
 
+from src.research.render_results import build_warnings
 from src.ui import RESULTS_DIR, apply_theme, load_json, render_disclaimer
 
 st.set_page_config(page_title="Evaluation · MedFlow-XAI", page_icon="✦", layout="wide")
@@ -13,6 +14,9 @@ result = load_json(RESULTS_DIR / "resnet18" / "results.json")
 if not result:
     st.warning("No evaluation artifact found. Run the training/evaluation command first.")
     st.stop()
+
+for warning in build_warnings({"resnet18": result}):
+    st.warning(warning)
 
 metrics = [
     ("Accuracy", "accuracy"),

@@ -11,6 +11,9 @@ psycopg2-binary
 python-dotenv
 pytest
 mlflow-skinny
+# mlflow-skinny needs these to use the sqlite:/// tracking store used by train_day3.py
+sqlalchemy
+alembic
 fastapi
 uvicorn[standard]
 python-multipart

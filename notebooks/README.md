@@ -9,11 +9,13 @@ The handover's planned notebook workflows map to these commands:
 | Planned workflow | Reproducible command |
 | --- | --- |
 | EDA and dataset validation | `python -m src.data.validate` |
-| Baseline training and evaluation | `python -m src.models.train --epochs 1 --batch-size 1024` |
-| ResNet and augmentation comparison | `python -m src.models.train_day3 --epochs 1 --batch-size 1024 --experiment all` |
+| Baseline training and evaluation | `python -m src.models.train --epochs 10 --batch-size 1024` |
+| ResNet and augmentation comparison | `python -m src.models.train_day3 --epochs 10 --batch-size 1024 --experiment all` |
 | Grad-CAM analysis | `python -m src.models.generate_gradcam` |
 | Research figures | `python -m src.research.generate_artifacts` |
 
 All generated outputs are written to the documented `data/`, `models/`,
 `results/`, `paper/figures/`, and `research/` paths. This avoids notebook
 outputs becoming stale or masking the actual command-line pipeline.
+
+`colab_retrain.ipynb` is a thin runner for these same commands on a free GPU. It contains no logic of its own.

@@ -48,45 +48,82 @@ def save_overlay(image: torch.Tensor, cam: torch.Tensor, output_path: Path, titl
     plt.close(figure)
 
 
+def _display_path(path: Path) -> str:
+    try:
+        return path.resolve().relative_to(ROOT_DIR).as_posix()
+    except ValueError:
+        return path.name
+
+
+def _count_by(records: list[dict[str, Any]], key: str) -> list[tuple[str, int]]:
+    counts: dict[str, int] = {}
+    for record in records:
+        counts[record[key]] = counts.get(record[key], 0) + 1
+    return sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+
+
+def _format_counts(counts: list[tuple[str, int]]) -> str:
+    return ", ".join(f"{label} ({count})" for label, count in counts) or "none"
+
+
 def create_analysis(
     records: list[dict[str, Any]],
     checkpoint: Path,
     output_path: Path,
 ) -> None:
+    """Write a Grad-CAM report whose statements are computed from the records.
+
+    Nothing here is hardcoded about model behaviour. Whether a heatmap highlights
+    *relevant tissue* is a human judgement, so that part is left as a template.
+    """
     correct = [record for record in records if record["correct"]]
     incorrect = [record for record in records if not record["correct"]]
-    accuracy = len(correct) / len(records) if records else 0.0
+    predicted_classes = {record["predicted_label"] for record in records}
     lines = [
         "# Grad-CAM analysis",
         "",
-        "This report was generated from selected examples in the PathMNIST "
-        f"test split using `{checkpoint.name}`.",
+        "This report was generated from examples in the PathMNIST test split using "
+        f"`{checkpoint.name}`.",
         "",
-        "## Evaluation summary",
+        "## How the examples were selected",
         "",
-        f"- Evaluated images: {len(records)}",
-        f"- Correct predictions: {len(correct)}",
-        f"- Incorrect predictions: {len(incorrect)}",
-        f"- Accuracy among selected examples: {accuracy:.4f}",
-        f"- Target layer: `ResNet18.layer4[-1]`",
+        "The first 10 correct and the first 10 incorrect predictions in test-split "
+        "order were taken. This is **not** a random or class-balanced sample, so the "
+        "share of correct examples here says nothing about model accuracy. Use "
+        "`results/resnet18/results.json` for accuracy.",
         "",
-        "## Interpretation",
+        "## What the selected examples contain",
         "",
-        "The heatmaps show regions that contributed most to the selected "
-        "class score. They are model-attribution visualizations, not proof "
-        "that the model used clinically meaningful tissue structures.",
-        "Review the saved correct and incorrect examples below for tissue "
-        "relevance and failure analysis. Conclusions should be limited to "
-        "the displayed samples and should not be generalized to clinical use.",
-        "In this run, all selected correct examples were from the background "
-        "class, while the selected errors were non-background images predicted "
-        "as background. This indicates a class-collapse failure in the current "
-        "checkpoint; it should be re-trained on the full dataset before using "
-        "these figures as representative model behavior.",
-        "",
-        "## Correct predictions",
+        f"- Examples: {len(records)} ({len(correct)} correct, {len(incorrect)} incorrect)",
+        f"- True classes among correct examples: {_format_counts(_count_by(correct, 'true_label'))}",
+        f"- True classes among incorrect examples: {_format_counts(_count_by(incorrect, 'true_label'))}",
+        f"- Predicted classes among incorrect examples: {_format_counts(_count_by(incorrect, 'predicted_label'))}",
+        f"- Target layer: `ResNet18.layer4[-1]` (4 x 4 feature map upsampled to 28 x 28, so heatmaps are coarse)",
         "",
     ]
+    if len(predicted_classes) == 1:
+        lines.extend(
+            [
+                "> **Warning: class collapse.** Every selected example, correct or not, was "
+                f"predicted as **{next(iter(predicted_classes))}**. The checkpoint behaves like a "
+                "constant classifier, so these heatmaps are not meaningful explanations. "
+                "Retrain before drawing any conclusion.",
+                "",
+            ]
+        )
+    lines.extend(
+        [
+            "## Interpretation",
+            "",
+            "Grad-CAM heatmaps show regions that contributed most to the selected class "
+            "score. They are model-attribution visualizations, not proof that the model "
+            "used clinically meaningful tissue structures. Conclusions apply only to the "
+            "displayed samples.",
+            "",
+            "## Correct predictions",
+            "",
+        ]
+    )
     lines.extend(
         f"- `{record['file']}`: true **{record['true_label']}**, "
         f"predicted **{record['predicted_label']}**"
@@ -97,6 +134,20 @@ def create_analysis(
         f"- `{record['file']}`: true **{record['true_label']}**, "
         f"predicted **{record['predicted_label']}**"
         for record in incorrect[:10]
+    )
+    lines.extend(
+        [
+            "",
+            "## Manual review (fill in after looking at the figures)",
+            "",
+            "Heatmap relevance cannot be computed automatically. For each category below, "
+            "view the figures in `paper/figures/` and record what you actually see.",
+            "",
+            "- Correct prediction + sensible heatmap: _(file names and what the heatmap covers)_",
+            "- Correct prediction + suspicious heatmap: _(file names; e.g. background, borders, artefacts)_",
+            "- Wrong prediction + heatmap: _(file names; what the model attended to, which class it confused)_",
+            "- Patterns across classes: _(which classes are confused, and whether the highlighted regions explain it)_",
+        ]
     )
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -180,7 +231,8 @@ def generate_gradcam(
         )
     create_analysis(records, checkpoint, analysis_path)
     manifest = {
-        "checkpoint": str(checkpoint),
+        # Relative path so the manifest does not leak a local machine path.
+        "checkpoint": _display_path(checkpoint),
         "device": str(device),
         "evaluated_examples": len(records),
         "correct_examples": correct_count,
