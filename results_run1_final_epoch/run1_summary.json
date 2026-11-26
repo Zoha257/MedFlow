@@ -1,0 +1,76 @@
+{
+  "note": "First run: the model after the LAST epoch (epoch 10) was tested. Numbers copied from the printed output; per-class files were lost when the session reset.",
+  "settings": {
+    "epochs": 10,
+    "batch_size": 256,
+    "learning_rate": 0.001,
+    "seed": 42,
+    "device": "cuda"
+  },
+  "baseline_cnn": {
+    "accuracy": 0.8071030640668524,
+    "precision_macro": 0.7681637241801407,
+    "recall_macro": 0.7647673256144714,
+    "f1_macro": 0.7527196021394603,
+    "num_predicted_classes": 9,
+    "inference_time_seconds": 0.713438200999974,
+    "training_time_seconds": 140.09489578799997,
+    "num_parameters": 422089,
+    "val_accuracy_per_epoch": [
+      0.6943222710915634,
+      0.7532986805277889,
+      0.7630947620951619,
+      0.7574970011995202,
+      0.7727908836465414,
+      0.7845861655337865,
+      0.7958816473410636,
+      0.8171731307477009,
+      0.8200719712115154,
+      0.8137744902039185
+    ]
+  },
+  "resnet18": {
+    "accuracy": 0.6320334261838441,
+    "precision_macro": 0.6841224046468988,
+    "recall_macro": 0.6103056453318357,
+    "f1_macro": 0.5558019123231932,
+    "num_predicted_classes": 9,
+    "inference_time_seconds": 1.9303387130000829,
+    "training_time_seconds": 744.428594197,
+    "num_parameters": 11173449,
+    "val_accuracy_per_epoch": [
+      0.8380647740903638,
+      0.7492003198720512,
+      0.9260295881647341,
+      0.8507596961215513,
+      0.7927828868452619,
+      0.7389044382247101,
+      0.9035385845661735,
+      0.8558576569372252,
+      0.9390243902439024,
+      0.7489004398240704
+    ]
+  },
+  "resnet18_aug": {
+    "accuracy": 0.5895543175487465,
+    "precision_macro": 0.6181262237265356,
+    "recall_macro": 0.6163263382791745,
+    "f1_macro": 0.5860282498096274,
+    "num_predicted_classes": 9,
+    "inference_time_seconds": 1.9436977280001884,
+    "training_time_seconds": 868.058493792,
+    "num_parameters": 11173449,
+    "val_accuracy_per_epoch": [
+      0.6782287085165933,
+      0.7283086765293882,
+      0.43912435025989605,
+      0.8476609356257497,
+      0.7351059576169532,
+      0.6094562175129948,
+      0.9382247101159537,
+      0.7986805277888844,
+      0.6302479008396641,
+      0.7373050779688125
+    ]
+  }
+}

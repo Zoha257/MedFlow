@@ -78,13 +78,19 @@ def train_baseline(
     criterion = nn.CrossEntropyLoss()
     history: list[dict[str, float]] = []
     started = time.perf_counter()
+    best_f1, best_epoch, best_state = -1.0, 0, None
 
     for epoch in range(1, epochs + 1):
         loss = train_one_epoch(model, train_loader, optimizer, criterion, device)
         val_metrics, _ = evaluate_model(model, val_loader, device)
         history.append({"epoch": epoch, "train_loss": loss, **{f"val_{key}": value for key, value in val_metrics.items()}})
         print(f"epoch={epoch} train_loss={loss:.4f} val_accuracy={val_metrics['accuracy']:.4f}")
+        if val_metrics["f1_macro"] > best_f1:  # model selection uses the VALIDATION split only
+            best_f1, best_epoch = val_metrics["f1_macro"], epoch
+            best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
 
+    model.load_state_dict(best_state)  # test the best-validation epoch, not simply the last one
+    print(f"Selected epoch {best_epoch} (best validation macro-F1 {best_f1:.4f})")
     test_metrics, matrix = evaluate_model(model, test_loader, device)
     training_seconds = time.perf_counter() - started
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
@@ -102,6 +108,8 @@ def train_baseline(
         "learning_rate": learning_rate,
         "seed": seed,
         "max_samples": max_samples,  # None = full dataset
+        "checkpoint_selection": "best validation macro-F1",
+        "best_epoch": best_epoch,
         "device": str(device),
         "training_time_seconds": training_seconds,
         "num_parameters": sum(parameter.numel() for parameter in model.parameters()),

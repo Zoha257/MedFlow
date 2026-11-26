@@ -79,6 +79,7 @@ def run_experiment(
     criterion = nn.CrossEntropyLoss()
     history: list[dict[str, float]] = []
     started = time.perf_counter()
+    best_f1, best_epoch, best_state = -1.0, 0, None
     # Smoke runs (--max-samples) must never overwrite the checkpoint the API serves.
     run_name = f"{name}_smoke" if max_samples is not None else name
 
@@ -105,7 +106,12 @@ def run_experiment(
             history.append(epoch_metrics)
             mlflow.log_metrics({key: float(value) for key, value in epoch_metrics.items()}, step=epoch)
             print(f"{name} epoch={epoch} train_loss={loss:.4f} val_accuracy={val_metrics['accuracy']:.4f}")
+            if val_metrics["f1_macro"] > best_f1:  # model selection uses the VALIDATION split only
+                best_f1, best_epoch = val_metrics["f1_macro"], epoch
+                best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
 
+        model.load_state_dict(best_state)  # test the best-validation epoch, not simply the last one
+        print(f"{name}: selected epoch {best_epoch} (best validation macro-F1 {best_f1:.4f})")
         test_metrics, matrix = evaluate_model(model, test_loader, device)
         training_seconds = time.perf_counter() - started
         metrics: dict[str, Any] = {
@@ -117,6 +123,8 @@ def run_experiment(
             "learning_rate": learning_rate,
             "seed": seed,
             "max_samples": max_samples,  # None = full dataset
+            "checkpoint_selection": "best validation macro-F1",
+            "best_epoch": best_epoch,
             "device": str(device),
             "training_time_seconds": training_seconds,
             "num_parameters": sum(parameter.numel() for parameter in model.parameters()),
